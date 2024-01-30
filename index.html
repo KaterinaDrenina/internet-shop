@@ -4,9 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./style.css">
-    <title>Document</title>
+    <title>Internet shop</title>
 </head>
 <body>
+    <aside>
+        <nav>
+            <ul id="categoryList">
+                <li onclick="showProducts ('Mobile phones')">Mobile phones</li>
+                <li onclick="showProducts ('TV')">TV</li>
+                <li onclick="showProducts ('Laptops and computers')">Laptops and computers</li>
+                <li onclick="showProducts ('Home appliances')">Home appliances</li>
+                <li onclick="showProducts ('Garden items')">Garden items</li>
+            </ul>
+        </nav>
+    </aside>
+    <main>
+        <div class="product-list" id="productList">
+
+        </div>
+        
+    </main>
     
 
     <script src="./app.js"></script>

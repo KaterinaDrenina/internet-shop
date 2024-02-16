@@ -254,6 +254,7 @@ function displayProductList(products) {
 }
 
 function showProductInfo(product) {
+
     productList.innerHTML = ''; 
     const productDetails = document.createElement('div');
     productDetails.innerHTML = `
@@ -264,7 +265,27 @@ function showProductInfo(product) {
       <h4>${product.price}</h4>
       <button onclick="buyProduct('${product.name}')">Buy</button>
     `;
+
     productList.appendChild(productDetails);
+
+}
+
+function displayOrderConfirmation(orderData) {
+    productList.innerHTML = '';
+
+    const orderInfo = document.createElement('div');
+    orderInfo.innerHTML = `
+    <h3>Order confirmation</h3>
+    <p>Buyer's name: ${orderData.buyerName}</p>
+    <p>City: ${orderData.city}</p>
+    <p>Nova Poshta warehouse: ${orderData.warehouse}</p>
+    <p>Payment method: ${orderData.paymentMethod}</p>
+    <p>Quantity: ${orderData.quantity}</p>
+    <p>Comment: ${orderData.comment}</p>
+    `;
+    productList.appendChild(orderInfo);
+    
+    alert('Order confirmed', orderData);
 }
 
 function buyProduct(productName) {
@@ -283,10 +304,34 @@ function buyProduct(productName) {
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
 
-    alert(' Product purchased! ');
+    updateMyOrdersButtonText();
     showCategories();
 
 }
+
+function updateMyOrdersButtonText() {
+
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const myOrdersButton = document.getElementById('myOrdersButton');
+    
+    if(orders.length > 0) {
+        myOrdersButton.textContent = `My orders (${orders.length})`;
+
+    } else {
+        myOrdersButton.textContent = 'My orders';
+    }
+    
+}
+
+window.addEventListener('load', () => {
+    updateMyOrdersButtonText();
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    if(orders.length > 0) {
+        showOrders();
+    } else {
+        showCategories();
+    }
+});
 
 function showCategories() {
     productList.innerHTML = ''; 
@@ -297,40 +342,47 @@ document.getElementById('myOrdersButton').addEventListener('click', function() {
 });
 
 function showOrders() {
+
     categoryList.style.display = 'none';
 
     const orders = JSON.parse(localStorage.getItem('orders')) || [];
     productList.innerHTML = '';
 
-    orders.forEach(order => {
-        const orderElement = document.createElement('div');
-        orderElement.classList.add('order-item');
-        orderElement.innerHTML = `
-            <div class="order-summary">
-                <p>Date: ${order.date}</p>
-                <p>Price: ${order.price}</p>
-            </div>
-        `;
+    if (orders.length === 0) {
+        productList.innerHTML = '<p class="no-orders">You don\'t have any orders yet.</p>';
+    } else {
+        
+        orders.forEach(order => {
+            const orderElement = document.createElement('div');
+            orderElement.classList.add('order-item');
+            orderElement.innerHTML = `
+                <div class="order-summary">
+                    <p>Date: ${order.date}</p>
+                    <p>Price: ${order.price}</p>
+                </div>
+            `;
+    
+            const detailsButton = document.createElement('button');
+            detailsButton.textContent = 'View details';
+            detailsButton.onclick = function(event) {
+                event.stopPropagation();
+                showOrderDetails(order);
+            };
+    
+            const deleteButtton = document.createElement('button');
+            deleteButtton.textContent = 'Delete order';
+            deleteButtton.onclick = function(event) {
+                event.stopPropagation();
+                deleteOrder(order.id);
+            };
+    
+            orderElement.appendChild(detailsButton);
+            orderElement.appendChild(deleteButtton);
+            productList.appendChild(orderElement);
+        });
+    }
 
-        const detailsButton = document.createElement('button');
-        detailsButton.textContent = 'View details';
-        detailsButton.onclick = function(event) {
-            event.stopPropagation();
-            showOrderDetails(order);
-        };
-
-        const deleteButtton = document.createElement('button');
-        deleteButtton.textContent = 'Delete order';
-        deleteButtton.onclick = function(event) {
-            event.stopPropagation();
-            deleteOrder(order.id);
-        };
-
-        orderElement.appendChild(detailsButton);
-        orderElement.appendChild(deleteButtton);
-        productList.appendChild(orderElement);
-    });
-
+    updateMyOrdersButtonText();
 }
 
 function showOrderDetails(order) {
@@ -363,9 +415,11 @@ function deleteOrder(orderId) {
     localStorage.setItem('orders', JSON.stringify(updatedOrders));
 
     showOrders();
+    updateMyOrdersButtonText();
 }
 
 window.addEventListener('load', () => {
+    updateMyOrdersButtonText();
     const orders = JSON.parse(localStorage.getItem('orders')) || [];
     if(orders.length > 0) {
         showOrders();
@@ -373,3 +427,156 @@ window.addEventListener('load', () => {
         showCategories();
     }
 });
+
+function showCheckoutForm(product) {
+    const modal = document.createElement('div');
+    modal.classList.add('modal');
+    
+    const cities = ['Kyiv', 'Lviv', 'Odesa', 'Dnipro', 'Kharkiv'];
+
+    const priceNumber = parseFloat(product.price.replace(/\s/g, '').replace('₴', ''));    
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close-button">×</span>
+            <form id="checkoutForm">
+                <h2>Confirm Your Order</h2>
+                <label for="buyerName">Name:</label>
+                <input type="text" id="buyerName" name="buyerName" placeholder="Enter Your Name and Last Name" required>
+
+                <label for="city">City:</label>
+                <select id="city" name="city" required>
+                    <option value="">Select a city</option>
+                    ${cities.map(city => `<option value="${city}">${city}</option>`).join('')}
+                </select>
+
+                <label for="warehouse">Nova Poshta Office:</label>
+                <input type="number" id="warehouse" name="warehouse" placeholder="141" required>
+
+                <label>Payment Method:</label>
+                <div>
+                    <input type="radio" id="cash" name="paymentMethod" value="Cash" required>
+                    <label for="cash">Cash</label>
+                    <input type="radio" id="card" name="paymentMethod" value="Card" required>
+                    <label for="card">Card</label>
+                </div>
+
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" value="1" required>
+
+                <label for="comment">Comment:</label>
+                <textarea id="comment" name="comment" placeholder="Leave your comment to the order"></textarea>
+
+                <p>Total: <strong>${priceNumber.toFixed(2)}₴</strong></p>
+
+                <button type="submit" class="confirm-btn">Confirm Order</button>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.close-button').addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+
+    modal.querySelector('#checkoutForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const validationMessages = modal.querySelectorAll('.validation-message');
+        validationMessages.forEach(message => message.remove());
+
+        let formIsValid = true;
+
+        function invalidateInput(input, message) {
+            input.style.borderColor = 'red';
+            const errorMessage = document.createElement('div');
+            errorMessage.textContent = message;
+            errorMessage.className = 'validation-message';
+            errorMessage.style.color = 'red';
+            input.parentNode.insertBefore(errorMessage, input.nextSibling);
+            formIsValid = false;
+        }
+
+        function resetInput(input) {
+            input.style.borderColor = '';
+        }
+
+        const buyerNameInput = modal.querySelector('#buyerName');
+        resetInput(buyerNameInput);
+        if (!buyerNameInput.value.trim()) {
+            invalidateInput(buyerNameInput, 'Name is required.');
+        }
+
+        const citySelect = modal.querySelector('#city');
+        resetInput(citySelect);
+        if (!citySelect.value) {
+            invalidateInput(citySelect, 'City is required.');
+        }
+
+        const warehouseInput = modal.querySelector('#warehouse');
+        resetInput(warehouseInput);
+        if (!warehouseInput.value.trim()) {
+            invalidateInput(warehouseInput, 'Nova Poshta Office number is required.');
+        }
+
+        const quantityInput = modal.querySelector('#quantity');
+        resetInput(quantityInput);
+        if (!quantityInput.value.trim() || parseInt(quantityInput.value, 10) <= 0) {
+            invalidateInput(quantityInput, 'Quantity must be greater than 0.');
+        }
+
+        if (formIsValid) {
+            const buyerName = buyerNameInput.value.trim();
+            const city = citySelect.value;
+            const warehouse = warehouseInput.value.trim();
+            const paymentMethod = modal.querySelector('input[name="paymentMethod"]:checked').value;
+            const quantity = quantityInput.value.trim();
+            const comment = modal.querySelector('#comment').value.trim();
+    
+            processOrder({
+                product,
+                buyerName,
+                city,
+                warehouse,
+                paymentMethod,
+                quantity,
+                comment
+            });
+    
+           
+            modal.style.display = 'none';
+        }
+    });
+}
+
+function processOrder(orderData) {
+    
+    console.log('Processing order:', orderData);
+
+    displayOrderConfirmation(orderData);
+}
+
+function displayOrderConfirmation(orderData) {
+    productList.innerHTML = '';
+
+    const orderConfirmation = document.createElement('div');
+    orderConfirmation.innerHTML = `
+        <h3>Order Confirmation</h3>
+        <img src="${orderData.product.image}" alt="${orderData.product.name}" width="100">
+        <p>${orderData.product.name}</p>
+        <p>Total: ${orderData.product.price}₴</p>
+        <p>Your Name: ${orderData.buyerName}</p>
+        <p>City: ${orderData.city}</p>
+        <p>Nova Poshta office: ${orderData.warehouse}</p>
+    `;
+    productList.appendChild(orderConfirmation);
+}
+
+function buyProduct(productName) {
+    const product = products.find(p => p.name === productName);
+    if(!product) return;
+   
+    showCheckoutForm(product);
+}

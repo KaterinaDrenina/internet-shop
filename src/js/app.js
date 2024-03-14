@@ -1,3 +1,7 @@
+import * as myFunctions from './modules/functions.js';
+
+myFunctions.testWebP();
+
 const categories = ['Mobile phones', 'TV', 'Laptops and computers', 'Home appliances', 'Garden items']
 
 const products = [
@@ -401,13 +405,15 @@ function showOrderDetails(order) {
         <p>Details: ${order.details}</p>
     `;
     productList.appendChild(orderDetails);
+
+    function showCategories() {
+        categoryList.style.display = 'block';
+    
+        productList.innerHTML = '';
+    }
 }
 
-function showCategories() {
-    categoryList.style.display = 'block';
 
-    productList.innerHTML = '';
-}
 
 function deleteOrder(orderId) {
     const orders = JSON.parse(localStorage.getItem('orders')) || [];
@@ -556,27 +562,29 @@ function processOrder(orderData) {
     console.log('Processing order:', orderData);
 
     displayOrderConfirmation(orderData);
+
+    function displayOrderConfirmation(orderData) {
+        productList.innerHTML = '';
+    
+        const orderConfirmation = document.createElement('div');
+        orderConfirmation.innerHTML = `
+            <h3>Order Confirmation</h3>
+            <img src="${orderData.product.image}" alt="${orderData.product.name}" width="100">
+            <p>${orderData.product.name}</p>
+            <p>Total: ${orderData.product.price}₴</p>
+            <p>Your Name: ${orderData.buyerName}</p>
+            <p>City: ${orderData.city}</p>
+            <p>Nova Poshta office: ${orderData.warehouse}</p>
+        `;
+        productList.appendChild(orderConfirmation);
+    }
+
+    function buyProduct(productName) {
+        const product = products.find(p => p.name === productName);
+        if(!product) return;
+       
+        showCheckoutForm(product);
+    }
 }
 
-function displayOrderConfirmation(orderData) {
-    productList.innerHTML = '';
 
-    const orderConfirmation = document.createElement('div');
-    orderConfirmation.innerHTML = `
-        <h3>Order Confirmation</h3>
-        <img src="${orderData.product.image}" alt="${orderData.product.name}" width="100">
-        <p>${orderData.product.name}</p>
-        <p>Total: ${orderData.product.price}₴</p>
-        <p>Your Name: ${orderData.buyerName}</p>
-        <p>City: ${orderData.city}</p>
-        <p>Nova Poshta office: ${orderData.warehouse}</p>
-    `;
-    productList.appendChild(orderConfirmation);
-}
-
-function buyProduct(productName) {
-    const product = products.find(p => p.name === productName);
-    if(!product) return;
-   
-    showCheckoutForm(product);
-}
